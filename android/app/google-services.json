@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "299690527136",
+    "project_id": "test-caller-app",
+    "storage_bucket": "test-caller-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:299690527136:android:445d62337e76825dff3cc5",
+        "android_client_info": {
+          "package_name": "com.example.web_rtc_template"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "299690527136-a2q509a2s9iea9qvd4m28e8qoh5edcrg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.web_rtc_template",
+            "certificate_hash": "3e5679a5829da6f41c5ed0302a30e7a0368ac68b"
+          }
+        },
+        {
+          "client_id": "299690527136-m8pcdlhovce3u98u70ctutfp9sqgivl5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmolILUz5xEXlZwiLVdIqaGcIazuVksPw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "299690527136-m8pcdlhovce3u98u70ctutfp9sqgivl5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
