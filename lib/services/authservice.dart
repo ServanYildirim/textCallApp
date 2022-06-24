@@ -21,6 +21,7 @@ class AuthService {
       await _auth.createUserWithEmailAndPassword(email: emailToAuth, password: passwordToAuth).then((UserCredential user) {
         log(user.toString(), name: "UserCredential for register");
         userService.setUser(userModel: userModelToFirestore..id = user.user?.uid); // We need to set doc id in firestore user. (Auth uid = firestore doc id)
+        Get.to(const HomePage());
       });
     } catch (e) {
       Get.defaultDialog(
@@ -36,10 +37,11 @@ class AuthService {
     }
   }
 
-  Future<void> signIn({required String emailToAuth, required String passwordToAuth}) async {
+  Future<void> login({required String emailToAuth, required String passwordToAuth}) async {
     try {
       await _auth.signInWithEmailAndPassword(email: emailToAuth, password: passwordToAuth).then((UserCredential user) {
         log(user.toString(), name: "UserCredential for login");
+        Get.to(const HomePage());
       });
     } catch (e) {
       Get.defaultDialog(
