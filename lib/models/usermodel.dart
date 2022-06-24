@@ -1,7 +1,7 @@
 
 class UserModel {
 
-  //String? id;
+  String? id;
   String? userName;
   String? bio;
   String? email;
@@ -10,7 +10,7 @@ class UserModel {
   DateTime? birthDate;
 
   UserModel({
-    //this.id,
+    this.id,
     this.userName,
     this.bio,
     this.email,
@@ -21,7 +21,7 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      //id: json['id'],
+      id: json['id'],
       userName: json['userName'],
       bio: json['bio'],
       email: json['email'],
@@ -37,7 +37,7 @@ class UserModel {
     data['userName'] = userName;
     data['bio'] = bio;
     data['email'] = email;
-    data['password'] = password;
+    //data['password'] = password;
     data['phone'] = phone;
     data['birthDate'] = birthDate;
     return data;

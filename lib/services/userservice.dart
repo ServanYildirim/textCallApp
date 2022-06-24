@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:web_rtc_template/controllers/usercontroller.dart';
@@ -16,8 +13,8 @@ class UserService {
     toFirestore: (userModel, _) => userModel.toJson(),
   );
 
-  void loginUser({required UserModel userModel}) {
-    userRef?.add(userModel).then((DocumentReference userDoc) {
+  Future<void> setUser({required UserModel userModel}) async {
+    await userRef?.doc(userModel.id).set(userModel).then((_) {
       Get.to(const HomePage());
     });
   }
