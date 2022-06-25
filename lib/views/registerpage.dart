@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:web_rtc_template/components/customdatepickertile.dart';
 import 'package:web_rtc_template/components/customtextfieldtile.dart';
+import 'package:web_rtc_template/models/interest.dart';
 import 'package:web_rtc_template/models/usermodel.dart';
 import 'package:web_rtc_template/services/authservice.dart';
+import 'package:web_rtc_template/services/interestservice.dart';
 import 'package:web_rtc_template/services/userservice.dart';
 import 'package:web_rtc_template/views/homepage.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatelessWidget with ChangeNotifier {
   RegisterPage({Key? key}) : super(key: key);
 
   final UserService userService = UserService();
+  final InterestService interestService = InterestService();
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -22,6 +25,9 @@ class RegisterPage extends StatelessWidget {
   final TextEditingController password2TextCtrl = TextEditingController();
 
   final ValueNotifier<DateTime?> selectedDate = ValueNotifier(null);
+
+  final ValueNotifier<List<Interest>> selectedInterests = ValueNotifier([]);
+  final int minInterestCount = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +71,7 @@ class RegisterPage extends StatelessWidget {
                   }
                 },
               ),
+              /*
               CustomTextFieldTile(
                 textCtrl: phoneTextCtrl,
                 icon: Icons.phone,
@@ -81,6 +88,8 @@ class RegisterPage extends StatelessWidget {
                 },
                 isPhone: true,
               ),
+
+               */
               CustomTextFieldTile(
                 textCtrl: emailTextCtrl,
                 icon: Icons.email_outlined,
@@ -141,6 +150,51 @@ class RegisterPage extends StatelessWidget {
                 isPassword: true,
               ),
               CustomDatePickerCard(selectedDate: selectedDate),
+              FutureBuilder(
+                future: interestService.getCategories(),
+                builder: (ctx, AsyncSnapshot<List<Interest>?> categorySnap) {
+                  if (!categorySnap.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  else if (categorySnap.hasError) {
+                    return const Center(child: Text("An error occured."));
+                  }
+                  else {
+                    return ValueListenableBuilder(
+                      valueListenable: selectedInterests,
+                      builder: (ctx, List<Interest> valueInterest, child) {
+                        return Column(
+                          children: [
+                            ListTile(
+                              title: valueInterest.isEmpty ? const Text("Interests") : Text("Interests (${valueInterest.length} selected)"),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: kRadialReactionRadius / 2),
+                              child: Wrap(
+                                spacing: kRadialReactionRadius,
+                                children: categorySnap.data!.map((i) => ChoiceChip(
+                                  label: Text(i.name.toString()),
+                                  selected: valueInterest.map((e) => e.id).toList().contains(i.id),
+                                  onSelected: (bool val) {
+                                    if (valueInterest.map((e) => e.id).toList().contains(i.id)) {
+                                      selectedInterests.value.removeWhere((a) => a.id == i.id);
+                                    }
+                                    else {
+                                      selectedInterests.value.add(i);
+                                    }
+                                    selectedInterests.notifyListeners();
+                                  },
+                                ),
+                                ).toList(),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    );
+                  }
+                },
+              ),
             ],
           ),
         ),
@@ -150,18 +204,22 @@ class RegisterPage extends StatelessWidget {
           title: ElevatedButton(
             child: const Text("Register"),
             onPressed: () {
+              void customAlert({required String text}) => Get.defaultDialog(
+                title: "",
+                middleText: text,
+                actions: [
+                  TextButton(
+                    child: const Text("OK"),
+                    onPressed: () => Get.back(),
+                  ),
+                ],
+              );
               if (formKey.currentState!.validate()) {
                 if (selectedDate.value == null) {
-                  Get.defaultDialog(
-                    title: "",
-                    middleText: "Please select your birthdate",
-                    actions: [
-                      TextButton(
-                        child: const Text("OK"),
-                        onPressed: () => Get.back(),
-                      ),
-                    ],
-                  );
+                  customAlert(text: "Please select your birthdate");
+                }
+                else if (selectedInterests.value.length < minInterestCount) {
+                  customAlert(text: "Please select at least $minInterestCount interests");
                 }
                 else {
                   AuthService authService = AuthService();
@@ -169,8 +227,6 @@ class RegisterPage extends StatelessWidget {
                     userName: userNameTextCtrl.text,
                     bio: bioTextCtrl.text,
                     email: emailTextCtrl.text,
-                    password: password1TextCtrl.text,
-                    phone: phoneTextCtrl.text,
                     birthDate: selectedDate.value,
                   ),
                   );

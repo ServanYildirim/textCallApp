@@ -18,11 +18,9 @@ class RtcService {
     ]
   };
 
-  final CollectionReference roomRef = FirebaseFirestore.instance.collection("users");
-
-  final String roomCollectionName = "rooms";
-  final String callerSubCollectionName = "callerCandidates";
-  final String calleeSubCollectionName = "calleeCandidates";
+  final String roomColName = "rooms";
+  final String callerSubColName = "callerCandidates";
+  final String calleeSubColName = "calleeCandidates";
 
   RTCPeerConnection? peerConnection;
   MediaStream? localStream;
@@ -59,11 +57,11 @@ class RtcService {
     });
   }
 
-  void collectIceCandidates({required DocumentReference roomRef, required String subCollectionName}) {
-    final candidateCollection = roomRef.collection(subCollectionName);
+  void collectIceCandidates({required DocumentReference roomRef, required String subColName}) {
+    final candidateCol = roomRef.collection(subColName);
     peerConnection?.onIceCandidate = (RTCIceCandidate candidate) {
       log(candidate.toMap().toString(), name: "onIceCandidate");
-      candidateCollection.add(candidate.toMap());
+      candidateCol.add(candidate.toMap());
     };
   }
 
@@ -77,8 +75,8 @@ class RtcService {
     };
   }
 
-  void listenCandidates({required DocumentReference roomRef, required String subCollectionName}) {
-    roomRef.collection(subCollectionName).snapshots().listen((snapshot) {
+  void listenCandidates({required DocumentReference roomRef, required String subColName}) {
+    roomRef.collection(subColName).snapshots().listen((snapshot) {
       for (var change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.added) {
           Map<String, dynamic> data = change.doc.data() as Map<String, dynamic>;
@@ -96,9 +94,9 @@ class RtcService {
   }
 
   Future<String> createRoom({required RTCVideoRenderer remoteRenderer}) async {
-    DocumentReference roomRef = FirebaseFirestore.instance.collection(roomCollectionName).doc();
+    DocumentReference roomRef = FirebaseFirestore.instance.collection(roomColName).doc();
     setPeerConnection();
-    collectIceCandidates(roomRef: roomRef, subCollectionName: "callerCandidates");
+    collectIceCandidates(roomRef: roomRef, subColName: "callerCandidates");
     // Add code for creating a room
     RTCSessionDescription offer = await peerConnection!.createOffer();
     await peerConnection!.setLocalDescription(offer);
@@ -119,25 +117,25 @@ class RtcService {
       }
     });
     // Listening for remote session description above
-    listenCandidates(roomRef: roomRef, subCollectionName: calleeSubCollectionName);
+    listenCandidates(roomRef: roomRef, subColName: calleeSubColName);
     return roomId;
   }
 
   Future<void> joinRoom({required String roomId, required RTCVideoRenderer remoteVideo}) async {
-    DocumentReference roomRef = FirebaseFirestore.instance.collection(roomCollectionName).doc(roomId);
+    DocumentReference roomRef = FirebaseFirestore.instance.collection(roomColName).doc(roomId);
     var roomSnapshot = await roomRef.get();
     log(roomSnapshot.exists.toString(), name: "Room exist");
     if (roomSnapshot.exists) {
       setPeerConnection();
-      collectIceCandidates(roomRef: roomRef, subCollectionName: callerSubCollectionName);
-      var calleeCandidatesCollection = roomRef.collection(calleeSubCollectionName);
+      collectIceCandidates(roomRef: roomRef, subColName: callerSubColName);
+      var calleeCandidatesCol = roomRef.collection(calleeSubColName);
       peerConnection?.onIceCandidate = (RTCIceCandidate? candidate) {
         if (candidate == null) {
           log("null", name: "onIceCandidate");
           return;
         } else {
           log(candidate.toMap(), name: "onIceCandidate");
-          calleeCandidatesCollection.add(candidate.toMap());
+          calleeCandidatesCol.add(candidate.toMap());
         }
       };
       addTrackToPeerConnection();
@@ -156,7 +154,7 @@ class RtcService {
       };
       await roomRef.update(roomWithAnswer);
       // Finished creating SDP answer
-      listenCandidates(roomRef: roomRef, subCollectionName: callerSubCollectionName);
+      listenCandidates(roomRef: roomRef, subColName: callerSubColName);
     }
   }
 
@@ -175,12 +173,12 @@ class RtcService {
     if (remoteStream != null) remoteStream!.getTracks().forEach((track) => track.stop());
     if (peerConnection != null) peerConnection!.close();
     if (roomId != null) {
-      var roomRef = FirebaseFirestore.instance.collection(roomCollectionName).doc(roomId);
-      var calleeCandidates = await roomRef.collection(calleeSubCollectionName).get();
+      var roomRef = FirebaseFirestore.instance.collection(roomColName).doc(roomId);
+      var calleeCandidates = await roomRef.collection(calleeSubColName).get();
       for (var document in calleeCandidates.docs) {
         document.reference.delete();
       }
-      var callerCandidates = await roomRef.collection(callerSubCollectionName).get();
+      var callerCandidates = await roomRef.collection(callerSubColName).get();
       for (var document in callerCandidates.docs) {
         document.reference.delete();
       }

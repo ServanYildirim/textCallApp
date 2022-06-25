@@ -21,13 +21,13 @@ class LoginPage extends StatelessWidget {
           ListTile(
             title: ElevatedButton(
               child: const Text("Login with Ercan"),
-              onPressed: () => authService.login(emailToAuth: UserController.ercan.email.toString(), passwordToAuth: UserController.ercan.password.toString()),
+              onPressed: () => authService.login(emailToAuth: UserController.ercan.email.toString(), passwordToAuth: "123456"),
             ),
           ),
           ListTile(
             title: ElevatedButton(
               child: const Text("Login with Servan"),
-              onPressed: () => authService.login(emailToAuth: UserController.servan.email.toString(), passwordToAuth: UserController.servan.password.toString()),
+              onPressed: () => authService.login(emailToAuth: UserController.servan.email.toString(), passwordToAuth: "123456"),
             ),
           ),
           ListTile(

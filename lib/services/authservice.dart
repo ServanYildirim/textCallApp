@@ -8,9 +8,20 @@ import 'package:web_rtc_template/services/userservice.dart';
 import 'package:web_rtc_template/views/homepage.dart';
 
 class AuthService {
+
+  final auth = FirebaseAuth.instance;
   final UserService userService = UserService();
 
-  final _auth = FirebaseAuth.instance;
+  void showErrorDialog({required var error}) => Get.defaultDialog(
+    title: "",
+    middleText: error.toString(),
+    actions: [
+      TextButton(
+        child: const Text("OK"),
+        onPressed: () => Get.back(),
+      ),
+    ],
+  );
 
   Future<void> register({
     required String emailToAuth,
@@ -18,42 +29,23 @@ class AuthService {
     required UserModel userModelToFirestore,
   }) async {
     try {
-      await _auth.createUserWithEmailAndPassword(email: emailToAuth, password: passwordToAuth).then((UserCredential user) {
+      await auth.createUserWithEmailAndPassword(email: emailToAuth, password: passwordToAuth).then((UserCredential user) {
         log(user.toString(), name: "UserCredential for register");
-        userService.setUser(userModel: userModelToFirestore..id = user.user?.uid); // We need to set doc id in firestore user. (Auth uid = firestore doc id)
-        Get.to(const HomePage());
+        userService.save(userModel: userModelToFirestore..id = user.user?.uid); // We need to set doc id in firestore user. (Auth uid = firestore doc id)
       });
-    } catch (e) {
-      Get.defaultDialog(
-        title: "",
-        middleText: e.toString(),
-        actions: [
-          TextButton(
-            child: const Text("OK"),
-            onPressed: () => Get.back(),
-          ),
-        ],
-      );
+    }catch (e) {
+      showErrorDialog(error: e);
     }
   }
 
   Future<void> login({required String emailToAuth, required String passwordToAuth}) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: emailToAuth, password: passwordToAuth).then((UserCredential user) {
+      await auth.signInWithEmailAndPassword(email: emailToAuth, password: passwordToAuth).then((UserCredential user) {
         log(user.toString(), name: "UserCredential for login");
         Get.to(const HomePage());
       });
     } catch (e) {
-      Get.defaultDialog(
-        title: "",
-        middleText: e.toString(),
-        actions: [
-          TextButton(
-            child: const Text("OK"),
-            onPressed: () => Get.back(),
-          ),
-        ],
-      );
+      showErrorDialog(error: e);
     }
   }
 }

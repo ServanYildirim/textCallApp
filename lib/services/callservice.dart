@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 
 class CallService {
 
-  final String onlineCollectionName = "online";
+  final String onlineColName = "online";
 
-  late final DocumentReference docRef = FirebaseFirestore.instance.collection(onlineCollectionName).doc("1");
+  late final DocumentReference docRef = FirebaseFirestore.instance.collection(onlineColName).doc("1");
 
   void setOnlineUser({required String uid}) {
-  final DocumentReference docRef = FirebaseFirestore.instance.collection(onlineCollectionName).doc(uid);
+  final DocumentReference docRef = FirebaseFirestore.instance.collection(onlineColName).doc(uid);
     docRef.set({"status": true});
   }
 
   void deleteOnlineUser({required String uid}) {
-    final DocumentReference docRef = FirebaseFirestore.instance.collection(onlineCollectionName).doc(uid);
+    final DocumentReference docRef = FirebaseFirestore.instance.collection(onlineColName).doc(uid);
     docRef.delete();
   }
 

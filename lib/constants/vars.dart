@@ -88,6 +88,10 @@ class Vars {
     iconTheme: const IconThemeData(
       color: Colors.black,
     ),
+    chipTheme: const ChipThemeData(
+      selectedColor: Colors.lightBlue,
+      secondaryLabelStyle: TextStyle(color: Colors.white),
+    ),
   );
 
 }
