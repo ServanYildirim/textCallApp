@@ -1,123 +1,42 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:lottie/lottie.dart';
-import 'package:web_rtc_template/models/usermodel.dart';
-import 'package:web_rtc_template/services/callservice.dart';
-import 'package:web_rtc_template/services/rtcservice.dart';
-import 'package:web_rtc_template/services/userservice.dart';
+import 'package:get/get.dart';
+import 'package:web_rtc_template/models/channelmodel.dart';
+import 'package:web_rtc_template/services/channelservice.dart';
+import 'package:web_rtc_template/views/callpage.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class HomePage extends StatelessWidget {
+  HomePage({Key? key}) : super(key: key);
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final RtcService rtcService = RtcService();
-  final UserService userService = UserService();
-  final CallService callService = CallService();
-  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
-  final TextEditingController textEditingController = TextEditingController();
-
-  String? roomId;
-
-  @override
-  void initState() {
-    _localRenderer.initialize();
-    _remoteRenderer.initialize();
-    rtcService.onAddRemoteStream = ((stream) {
-      _remoteRenderer.srcObject = stream;
-      setState(() {});
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _localRenderer.dispose();
-    _remoteRenderer.dispose();
-    super.dispose();
-  }
+  final ChannelService channelService = ChannelService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("RTC"),
+        title: const Text("Channels"),
       ),
-      body: Column(
-        children: [
-          StreamBuilder(
-            stream: callService.docRef.snapshots(),
-            builder: (ctx, AsyncSnapshot<DocumentSnapshot> onlineSnap) {
-              if (!onlineSnap.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              else if (onlineSnap.hasError) {
-                return const Center(child: Text("An error occured."));
-              }
-              /*
-              else if (onlineSnap.data!.) {
-                return const Center(child: Text("User list is empty."));
-              }
-
-               */
-              else {
-                return GestureDetector(
-                child: Lottie.asset(
-                  "assets/lotties/videocall.json",
-                  height: kToolbarHeight * 2,
-                  fit: BoxFit.contain,
+      body: FutureBuilder(
+        future: channelService.getChannels(),
+        builder: (ctx, AsyncSnapshot<List<ChannelModel>?> channelSnap) {
+          if (!channelSnap.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          else if (channelSnap.hasError) {
+            return const Center(child: Text("An error occured."));
+          }
+          else {
+            return ListView(
+              shrinkWrap: true,
+              children: channelSnap.data!.map((i) => Card(
+                child: ListTile(
+                  title: Text(i.name.toString()),
+                  onTap: () => Get.to(CallPage(channelModel: i)),
                 ),
-                onTap: () {},
-              );
-              }
-            }
-          ),
-          /*
-          StreamBuilder(
-            stream: userService.userRef?.snapshots(),
-            builder: (ctx, AsyncSnapshot<QuerySnapshot> userSnap) {
-              if (!userSnap.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (userSnap.hasError) {
-                return const Center(child: Text("An error occured."));
-              } else if (userSnap.data!.docs.isEmpty) {
-                return const Center(child: Text("User list is empty."));
-              } else {
-                return ListView(
-                  shrinkWrap: true,
-                  children: userSnap.data!.docs
-                      .map(
-                        (i) => ListTile(
-                          title: Text(i.id),
-                        ),
-                      )
-                      .toList(),
-                );
-              }
-            },
-          ),
-
-           */
-
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: ElevatedButton(
-                child: Icon(Icons.delete_forever),
-                onPressed: () => callService.deleteOnlineUser(uid: "docccc"),
               ),
-            ),
-          ],
-        ),
+              ).toList(),
+            );
+          }
+        },
       ),
       /*
       body: Column(
@@ -130,7 +49,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    rtcService.openUserMedia(localVideo: _localRenderer, remoteVideo: _remoteRenderer);
+                    rtcService.openUserMedia(localVideo: localRenderer, remoteVideo: remoteRenderer);
                     setState(() {});
                   },
                   child: const Text("Open camera & microphone"),
@@ -140,7 +59,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    roomId = await rtcService.createRoom(remoteRenderer: _remoteRenderer);
+                    roomId = await rtcService.createRoom(remoteRenderer: remoteRenderer);
                     textEditingController.text = roomId!;
                     setState(() {});
                   },
@@ -152,7 +71,7 @@ class _HomePageState extends State<HomePage> {
                 ElevatedButton(
                   onPressed: () {
                     // Add roomId
-                    rtcService.joinRoom(roomId: textEditingController.text, remoteVideo: _remoteRenderer);
+                    rtcService.joinRoom(roomId: textEditingController.text, remoteVideo: remoteRenderer);
                     setState(() {});
                   },
                   child: const Text("Join room"),
@@ -162,7 +81,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    rtcService.hangUp(localVideo: _localRenderer);
+                    rtcService.hangUp(localVideo: localRenderer);
                   },
                   child: const Text("Hangup"),
                 )
@@ -176,8 +95,8 @@ class _HomePageState extends State<HomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(child: RTCVideoView(_localRenderer, mirror: true)),
-                  Expanded(child: RTCVideoView(_remoteRenderer)),
+                  Expanded(child: RTCVideoView(localRenderer, mirror: true)),
+                  Expanded(child: RTCVideoView(remoteRenderer)),
                 ],
               ),
             ),

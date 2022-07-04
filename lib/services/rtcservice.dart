@@ -93,7 +93,7 @@ class RtcService {
     });
   }
 
-  Future<String> createRoom({required RTCVideoRenderer remoteRenderer}) async {
+  Future<String> createRoom() async {
     DocumentReference roomRef = FirebaseFirestore.instance.collection(roomColName).doc();
     setPeerConnection();
     collectIceCandidates(roomRef: roomRef, subColName: "callerCandidates");
@@ -121,7 +121,7 @@ class RtcService {
     return roomId;
   }
 
-  Future<void> joinRoom({required String roomId, required RTCVideoRenderer remoteVideo}) async {
+  Future<void> joinRoom({required String roomId}) async {
     DocumentReference roomRef = FirebaseFirestore.instance.collection(roomColName).doc(roomId);
     var roomSnapshot = await roomRef.get();
     log(roomSnapshot.exists.toString(), name: "Room exist");

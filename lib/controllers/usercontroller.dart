@@ -7,11 +7,13 @@ class UserController {
   static UserModel servan = UserModel(
     userName: "servan",
     email: "prenez.sy@gmail.com",
+    id: "lkr7VumAJmgRextWjqXGd1MEGw33",
   );
 
   static UserModel ercan = UserModel(
     userName: "ercan",
     email: "erci2000@gmail.com",
+    id: "M2RqcWBzliSbf8UMxkCowDhiudL2",
   );
 
 }

@@ -1,16 +1,16 @@
 
-class Interest {
+class ChannelModel {
 
   String? id;
   String? name;
 
-  Interest({
+  ChannelModel({
     this.id,
     this.name,
   });
 
-  factory Interest.fromJson(Map<String, dynamic> json) {
-    return Interest(
+  factory ChannelModel.fromJson(Map<String, dynamic> json) {
+    return ChannelModel(
       //id: json['id'], // Get from docRef
       name: json['name'],
     );
