@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:web_rtc_template/controllers/usercontroller.dart';
+import 'package:web_rtc_template/models/meetingmodel.dart';
 
 typedef StreamStateCallback = void Function(MediaStream stream);
 
@@ -25,8 +27,16 @@ class RtcService {
   RTCPeerConnection? peerConnection;
   MediaStream? localStream;
   MediaStream? remoteStream;
-  String? roomId;
   StreamStateCallback? onAddRemoteStream;
+
+  Future<void> setPeerConnection() async {
+    peerConnection = await createPeerConnection(configuration);
+    log(configuration.toString(), name: "Peer Connection config");
+    registerPeerConnectionListeners();
+    localStream?.getTracks().forEach((track) {
+      peerConnection?.addTrack(track, localStream!);
+    });
+  }
 
   void registerPeerConnectionListeners() {
     peerConnection?.onIceGatheringState = (RTCIceGatheringState state) {
@@ -46,15 +56,6 @@ class RtcService {
       onAddRemoteStream?.call(stream);
       remoteStream = stream;
     };
-  }
-
-  Future<void> setPeerConnection() async {
-    peerConnection = await createPeerConnection(configuration);
-    log(configuration.toString(), name: "Peer Connection config");
-    registerPeerConnectionListeners();
-    localStream?.getTracks().forEach((track) {
-      peerConnection?.addTrack(track, localStream!);
-    });
   }
 
   void collectIceCandidates({required DocumentReference roomRef, required String subColName}) {
@@ -93,10 +94,10 @@ class RtcService {
     });
   }
 
-  Future<String> createRoom() async {
+  Future<String?> createRoom() async {
     DocumentReference roomRef = FirebaseFirestore.instance.collection(roomColName).doc();
-    setPeerConnection();
-    collectIceCandidates(roomRef: roomRef, subColName: "callerCandidates");
+    await setPeerConnection();
+    collectIceCandidates(roomRef: roomRef, subColName: callerSubColName);
     // Add code for creating a room
     RTCSessionDescription offer = await peerConnection!.createOffer();
     await peerConnection!.setLocalDescription(offer);
@@ -126,7 +127,7 @@ class RtcService {
     var roomSnapshot = await roomRef.get();
     log(roomSnapshot.exists.toString(), name: "Room exist");
     if (roomSnapshot.exists) {
-      setPeerConnection();
+      await setPeerConnection();
       collectIceCandidates(roomRef: roomRef, subColName: callerSubColName);
       var calleeCandidatesCol = roomRef.collection(calleeSubColName);
       peerConnection?.onIceCandidate = (RTCIceCandidate? candidate) {
@@ -134,7 +135,7 @@ class RtcService {
           log("null", name: "onIceCandidate");
           return;
         } else {
-          log(candidate.toMap(), name: "onIceCandidate");
+          log(candidate.toString(), name: "onIceCandidate");
           calleeCandidatesCol.add(candidate.toMap());
         }
       };
@@ -165,7 +166,7 @@ class RtcService {
     remoteVideo.srcObject = await createLocalMediaStream('key');
   }
 
-  Future<void> hangUp({required RTCVideoRenderer localVideo}) async {
+  Future<void> hangUp({required RTCVideoRenderer localVideo, required String? roomId}) async {
     List<MediaStreamTrack> tracks = localVideo.srcObject!.getTracks();
     for (var track in tracks) {
       track.stop();
@@ -187,4 +188,5 @@ class RtcService {
     localStream!.dispose();
     remoteStream?.dispose();
   }
+
 }

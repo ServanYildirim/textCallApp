@@ -20,7 +20,7 @@ class UserService {
 
   Future<void> getSetUser({required String userId}) async {
     await userRef?.doc(userId).get().then((user) {
-      UserController.me = user.data() as UserModel;
+      UserController.me = (user.data() as UserModel)..id = user.id;
       log(UserController.me!.toJson().toString(), name: "Me");
       Get.to(HomePage());
     });

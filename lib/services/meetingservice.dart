@@ -1,5 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:web_rtc_template/controllers/usercontroller.dart';
 import 'package:web_rtc_template/models/meetingmodel.dart';
 import 'package:web_rtc_template/services/rtcservice.dart';
@@ -8,6 +9,7 @@ class MeetingService {
 
   final String meetingColName = "meetings";
   final String client2IdKey = "client2Id";
+  final String roomIdKey = "roomId";
   final String defaultClient2Id = "";
 
   final RtcService rtcService = RtcService();
@@ -20,26 +22,29 @@ class MeetingService {
   Future<void> createOrJoinMeeting() async {
     final QuerySnapshot? meetingSnap = await meetingRef?.get();
     if (
-        meetingSnap == null
+    meetingSnap == null
         || meetingSnap.size == 0
         || meetingSnap.docs.every((QueryDocumentSnapshot i) => (i.data() as MeetingModel).client2Id != "")
     ) {
-      rtcService.createRoom().then((id) => meetingRef?.add(
-        MeetingModel(
-          client1Id: UserController.me!.id,
-          client2Id: "",
-          roomId: id,
-        ),
-      ));
+      final String? roomId = await rtcService.createRoom();
+      if (roomId != null) {
+        meetingRef?.add(
+          MeetingModel(
+            client1Id: UserController.me!.id,
+            client2Id: "",
+            roomId: roomId,
+          ),
+        );
+      }
     }
     else {
-      final QueryDocumentSnapshot firstDoc = meetingSnap.docs.first;
+      final QueryDocumentSnapshot firstDoc = meetingSnap.docs.firstWhere((QueryDocumentSnapshot i) => (i.data() as MeetingModel).client2Id == "");
       rtcService.joinRoom(roomId: (firstDoc.data() as MeetingModel).roomId!);
       meetingRef?.doc(firstDoc.id).update(
-        MeetingModel(
-          client2Id: UserController.me!.id,
-          roomId: (firstDoc.data() as MeetingModel).roomId!,
-        ).toJson(),
+        {
+          client2IdKey: UserController.me!.id,
+          roomIdKey: (firstDoc.data() as MeetingModel).roomId!,
+        },
       );
     }
   }
