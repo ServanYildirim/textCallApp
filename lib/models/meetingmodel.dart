@@ -5,12 +5,14 @@ class MeetingModel {
   String? client1Id;
   String? client2Id;
   String? roomId;
+  String? channelId;
 
   MeetingModel({
     this.id,
     this.client1Id,
     this.client2Id,
     this.roomId,
+    this.channelId,
   });
 
   factory MeetingModel.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class MeetingModel {
       client1Id: json['client1Id'],
       client2Id: json['client2Id'],
       roomId: json['roomId'],
+      channelId: json['channelId'],
     );
   }
 
@@ -28,6 +31,7 @@ class MeetingModel {
     data['client1Id'] = client1Id;
     data['client2Id'] = client2Id;
     data['roomId'] = roomId;
+    data['channelId'] = channelId;
     return data;
   }
 }

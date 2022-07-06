@@ -42,7 +42,7 @@ class AuthService {
     try {
       await auth.signInWithEmailAndPassword(email: emailToAuth, password: passwordToAuth).then((UserCredential user) {
         log(user.toString(), name: "UserCredential for login");
-        userService.getSetUser(userId: user.user!.uid);
+        userService.getSet(userId: user.user!.uid);
       });
     } catch (e) {
       showErrorDialog(error: e);
